@@ -1,0 +1,10 @@
+[Unit]
+Description=Medi Service
+After=multi-user.target
+[Service]
+Type=simple
+Restart=always
+EnvironmentFile=/home/slane/medi/.env
+ExecStart=/home/slane/medi/venv/bin/python /home/slane/medi/src/run_tracker.py
+[Install]
+WantedBy=multi-user.target

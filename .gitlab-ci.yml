@@ -1,0 +1,96 @@
+stages:          # List of stages for jobs, and their order of execution
+  - build
+  - test
+  - deploy
+
+build-job:       # This job runs in the build stage, which runs first.
+  image: python:3.9.1
+  stage: build
+  script:
+    - echo "Compiling the code..."
+
+unit-test-job:   # This job runs in the test stage.
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  script:
+    - echo "Running unit tests... This will take about 60 seconds."
+    - echo "Code coverage is 90%"
+
+lint-test-job:   # This job also runs in the test stage.
+  stage: test    # It can run at the same time as unit-test-job (in parallel).
+  script:
+    - echo "Linting code... This will take about 10 seconds."
+    - echo "No lint issues found."
+
+dependency_scanning:
+  image: node:latest
+  stage: test
+  script:
+    # Install npm, snyk, and snyk-to-html
+    - npm install -g npm@latest
+    - npm install -g snyk
+    # Install snyk-to-html to generate an html report within the GitLab repo
+    - npm install snyk-to-html -g
+    # Run snyk help, snyk auth, snyk monitor, snyk test to break build and out report
+    # - snyk --help
+    - snyk auth $SNYK_AUTH
+    # Run snyk monitor to push results to Snyk UI and custom name the project
+    - mkdir .medi
+    - cp -r * .medi
+    - mv .medi medi
+    - ls medi
+    - apt-get update
+    - apt-get upgrade -y
+    - apt install python3-venv -y
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    - snyk monitor
+    # Run snyk test to fail the build if vulns are found
+    - snyk test --json | snyk-to-html -o snyk_results.html
+    # Add --json | snyk-to-html -o snyk_results.html to above to generate html report
+    # Can do so much more with Snyk Tech Services tools: https://github.com/orgs/snyk-tech-services/repositories
+
+# Comment
+deploy-job:      # This job runs in the deploy stage.
+  stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $SERVER_IPADDRESS >> ~/.ssh/known-hosts
+    - chmod 644 ~/.ssh/known-hosts
+
+  script:
+    - echo "Deploying application..."
+    - mkdir .medi
+    - cp -r * .medi
+    - mv .medi medi
+    - ls medi
+    - scp -o StrictHostKeyChecking=no -r medi slane@$SERVER_IPADDRESS:/home/slane
+    - echo "Application successfully deployed."
+    - echo "ssh remoting into server"
+    - ssh -o StrictHostKeyChecking=no slane@$SERVER_IPADDRESS "
+        cd /home/slane/medi &&
+        python3 -m venv venv &&
+        source venv/bin/activate &&
+        pip install -r requirements.txt"
+    - ssh -o StrictHostKeyChecking=no -t slane@$SERVER_IPADDRESS "
+        cat /home/slane/medi/medi.service | sudo tee /etc/systemd/system/medi.service"
+    - ssh -o StrictHostKeyChecking=no -t slane@$SERVER_IPADDRESS "
+        sudo systemctl daemon-reload &&
+        sudo systemctl enable medi.service &&
+        sudo systemctl start medi.service &&
+        sudo systemctl stop medi.service &&
+        sudo systemctl daemon-reload &&
+        sudo systemctl start medi.service"
+    - ssh -o StrictHostKeyChecking=no -t slane@$SERVER_IPADDRESS "
+        cat /home/slane/medi/mediTracker.service | sudo tee /etc/systemd/system/mediTracker.service"
+    - ssh -o StrictHostKeyChecking=no -t slane@$SERVER_IPADDRESS "
+        sudo systemctl daemon-reload &&
+        sudo systemctl enable mediTracker.service &&
+        sudo systemctl start mediTracker.service &&
+        sudo systemctl stop mediTracker.service &&
+        sudo systemctl daemon-reload &&
+        sudo systemctl start mediTracker.service"

@@ -1,0 +1,90 @@
+{
+	"type": "home",
+	"blocks": [
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*Hi  :wave:, Welcome to The Medi App*  :pill:"
+			},
+			"accessory": {
+				"type": "button",
+				"text": {
+					"type": "plain_text",
+					"text": ":gear:  Settings",
+					"emoji": true
+				},
+				"value": "click_me_1235",
+				"action_id": "action-settings"
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*`Medi`* allows you to *Mark* and *Track* when your child has received his/her medication."
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "\n\n"
+			}
+		},
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "Mark  :heavy_check_mark:",
+				"emoji": true
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Give Medication",
+						"emoji": true
+					},
+					"style": "primary",
+					"value": "click_me_123",
+					"action_id": "button-action-mark-medication_given"
+				}
+			]
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "\n\n"
+			}
+		},
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "Track  :calendar:",
+				"emoji": true
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "context",
+			"elements": [
+				{
+					"type": "mrkdwn",
+					"text": "*Add a patient to Medi in Settings :gear: to start tracking their medication history*  :smile:"
+				}
+			]
+		}
+	]
+}
